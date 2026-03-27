@@ -35,6 +35,12 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.12.0
+  barcode_widget: ^2.0.4
+  image_picker: ^1.2.1
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  flutter_image_compress: ^2.4.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +83,8 @@ flutter:
   fonts:
     - family: Poppins
       fonts:
+        - asset: fonts/Poppins-Regular.ttf
+        - asset: fonts/Poppins-Italic.ttf
         - asset: fonts/Poppins-Bold.ttf
         - asset: fonts/Poppins-ExtraBoldItalic.ttf
   #         style: italic
