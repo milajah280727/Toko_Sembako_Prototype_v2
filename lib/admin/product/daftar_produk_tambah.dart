@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:tokosembakolatihan/admin/product/barcode_scanner_page.dart'; // IMPORT FILE SCANNER BARU
 
 class DaftarProdukTambah extends StatefulWidget {
   const DaftarProdukTambah({super.key});
@@ -23,8 +24,8 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
   final _hargaBeliController = TextEditingController();
 
   bool _isLoading = false;
-  
-  // Variabel untuk Kategori (Dropdown)
+
+  // Variabel untuk Kategori
   List<String> _kategoriList = [];
   String? _selectedKategori;
   bool _isLoadingKategori = true;
@@ -38,10 +39,9 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     super.initState();
     _barcodeController.text = _generateRandomBarcode();
     _hargaBeliController.text = '0';
-    _fetchKategori(); // Panggil fungsi ambil kategori
+    _fetchKategori();
   }
 
-  // --- FUNGSI AMBIL KATEGORI DARI DATABASE ---
   Future<void> _fetchKategori() async {
     try {
       final response = await Supabase.instance.client
@@ -56,7 +56,6 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
       setState(() {
         _kategoriList = loadedKategori;
         _isLoadingKategori = false;
-        // Set default nilai pertama jika ada
         if (_kategoriList.isNotEmpty) {
           _selectedKategori = _kategoriList.first;
         }
@@ -64,9 +63,9 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     } catch (e) {
       setState(() => _isLoadingKategori = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat kategori: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal memuat kategori: $e')));
       }
     }
   }
@@ -80,7 +79,6 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     return barcode;
   }
 
-  // --- FUNGSI PILIH SUMBER GAMBAR ---
   void _showPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -89,7 +87,7 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.photo_library),
+                leading: const Icon(Icons.photo_library,color: Colors.blueAccent,),
                 title: const Text('Galeri'),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -97,7 +95,7 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera),
+                leading: const Icon(Icons.photo_camera,color: Colors.blueAccent),
                 title: const Text('Kamera'),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -133,9 +131,9 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
       } catch (e) {
         if (mounted) Navigator.pop(context);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal memproses gambar: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Gagal memproses gambar: $e')));
         }
       }
     }
@@ -170,11 +168,11 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
       await Supabase.instance.client.storage
           .from(bucketName)
           .upload(path, _imageFile!);
-          
+
       final imageUrl = Supabase.instance.client.storage
           .from(bucketName)
           .getPublicUrl(path);
-          
+
       return imageUrl;
     } catch (e) {
       print("GAGAL Upload Image: $e");
@@ -182,10 +180,18 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     }
   }
 
-  void _startScan() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fitur Scanner belum di-setup. Silakan input manual.')),
+  // --- FUNGSI SCAN BARCODE YANG SUDAH JALAN ---
+  void _startScan() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const BarcodeScannerPage()),
     );
+
+    if (result != null && result is String) {
+      setState(() {
+        _barcodeController.text = result;
+      });
+    }
   }
 
   Future<void> _generateAndPrintBarcode() async {
@@ -195,7 +201,6 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
         : _namaController.text;
     String price = _hargaController.text.isEmpty ? '0' : _hargaController.text;
     String barcodeData = _barcodeController.text;
-
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a6,
@@ -205,9 +210,18 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
             child: pw.Column(
               mainAxisSize: pw.MainAxisSize.min,
               children: [
-                pw.Text(productName, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  productName,
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
                 pw.SizedBox(height: 5),
-                pw.Text('Rp $price', style: pw.TextStyle(fontSize: 14, color: PdfColors.orange800)),
+                pw.Text(
+                  'Rp $price',
+                  style: pw.TextStyle(fontSize: 14, color: PdfColors.orange800),
+                ),
                 pw.SizedBox(height: 10),
                 pw.BarcodeWidget(
                   barcode: pw.Barcode.code128(),
@@ -240,9 +254,9 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     }
 
     if (_selectedKategori == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kategori wajib dipilih!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kategori wajib dipilih!')));
       return;
     }
 
@@ -253,11 +267,13 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
 
       final data = {
         'nama_produk': _namaController.text,
-        'kategori': _selectedKategori, // Mengambil nilai dari dropdown
+        'kategori': _selectedKategori,
         'harga_jual': int.parse(_hargaController.text),
         'barcode': _barcodeController.text,
         'gambar': finalImageUrl,
-        'harga_beli': int.parse(_hargaBeliController.text.isEmpty ? '0' : _hargaBeliController.text),
+        'harga_beli': int.parse(
+          _hargaBeliController.text.isEmpty ? '0' : _hargaBeliController.text,
+        ),
         'is_active': true,
       };
 
@@ -290,15 +306,17 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Tambah Produk'),
-        backgroundColor: const Color.fromARGB(255, 95, 133, 218),
-        elevation: 0,
+        title: const Text(
+          'Tambah Produk',
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w800),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // --- AREA GAMBAR ---
             GestureDetector(
               onTap: () => _showPicker(context),
               child: Container(
@@ -327,8 +345,12 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                             child: CircleAvatar(
                               backgroundColor: Colors.red,
                               child: IconButton(
-                                icon: const Icon(Icons.close, color: Colors.white),
-                                onPressed: () => setState(() => _imageFile = null),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _imageFile = null),
                               ),
                             ),
                           ),
@@ -337,46 +359,84 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                     : const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_photo_alternate_outlined, size: 50, color: Colors.grey),
-                          Text('Tap untuk ambil foto / galeri', style: TextStyle(color: Colors.grey)),
+                          Icon(
+                            Icons.add_photo_alternate_outlined,
+                            size: 50,
+                            color: Colors.blueAccent
+                          ),
+
+                          SizedBox(height: 30),
+
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 15),
+                            child: Text(
+                              'Tap untuk menagmbil foto atau tambahkan melalui galeri',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey,fontFamily: 'Poppins', fontSize: 12),
+                            ),
+                          ),
                         ],
                       ),
               ),
             ),
             const SizedBox(height: 24),
 
-            // --- KARTU BARCODE ---
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Barcode Produk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text(
+                        'Barcode Produk',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       Row(
                         children: [
                           Container(
-                            decoration: BoxDecoration(color: Colors.deepPurple.shade50, borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: IconButton(
-                              icon: const Icon(Icons.qr_code_scanner, color: Colors.deepPurple),
-                              onPressed: _startScan,
+                              icon: const Icon(
+                                Icons.qr_code_scanner,
+                                color: Colors.blueAccent,
+                              ),
+                              onPressed: _startScan, // Memanggil fungsi scan
                               constraints: const BoxConstraints(),
                               padding: const EdgeInsets.all(8),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: IconButton(
-                              icon: const Icon(Icons.print, color: Colors.orange),
-                              onPressed: _isLoading ? null : _generateAndPrintBarcode,
+                              icon: const Icon(
+                                Icons.print,
+                                color: Colors.blueAccent,
+                              ),
+                              onPressed: _isLoading
+                                  ? null
+                                  : _generateAndPrintBarcode,
                               constraints: const BoxConstraints(),
                               padding: const EdgeInsets.all(8),
                             ),
@@ -401,49 +461,68 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    _barcodeController.text,
-                    style: const TextStyle(letterSpacing: 2.0, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
-                  ),
+                  
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // --- FORM INPUT ---
-            _buildInputField(_namaController, 'Nama Produk', Icons.inventory_2_outlined, false),
+            _buildInputField(
+              _namaController,
+              'Nama Produk',
+              Icons.inventory_2_outlined,
+              false,
+            ),
             const SizedBox(height: 16),
 
-            // --- DROPDOWN KATEGORI (MENGGANTIKAN TEXTFIELD) ---
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Kategori',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black54,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 5,
+                      ),
+                    ],
                   ),
                   child: DropdownButtonFormField<String>(
                     value: _selectedKategori,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.category_outlined, color: const Color.fromARGB(255, 95, 133, 218)),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      // prefixIcon dihapus
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 16,
+                      ),
                       filled: true,
                       fillColor: Colors.white,
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color.fromARGB(255, 95, 133, 218), width: 2),
-                      ),
+                      // Outline saat tidak ditekan
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                      ),
+                      // Outline saat ditekan
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 95, 133, 218),
+                          width: 2,
+                        ),
                       ),
                     ),
                     hint: const Text('Pilih Kategori'),
@@ -458,32 +537,50 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                         _selectedKategori = newValue;
                       });
                     },
-                    validator: (value) => value == null ? 'Kategori wajib dipilih' : null,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            _buildInputField(_hargaController, 'Harga Jual', Icons.sell_outlined, true),
+            _buildInputField(
+              _hargaController,
+              'Harga Jual',
+              Icons.sell_outlined,
+              true,
+            ),
             const SizedBox(height: 16),
-            _buildInputField(_hargaBeliController, 'Harga Beli (Modal)', Icons.monetization_on_outlined, true),
-
             const SizedBox(height: 30),
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 40,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveProduct,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 95, 133, 218),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 2,
                 ),
                 child: _isLoading
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                    : const Text('SIMPAN PRODUK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : const Text(
+                        'Tambah Produk',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
               ),
             ),
           ],
@@ -492,15 +589,24 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     );
   }
 
-  Widget _buildInputField(TextEditingController controller, String label, IconData icon, bool isNumber) {
+  Widget _buildInputField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    bool isNumber,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 5),
         TextField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
@@ -508,15 +614,23 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            prefixIcon: Icon(icon, color: const Color.fromARGB(255, 95, 133, 218)),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+            // Ikon dihapus dari sini
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 10,
             ),
+            // Outline saat tidak ditekan
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+            ),
+            // Outline saat ditekan (Focus)
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 95, 133, 218), width: 2),
+              borderSide: const BorderSide(
+                color: Color.fromARGB(255, 95, 133, 218),
+                width: 2,
+              ),
             ),
           ),
         ),

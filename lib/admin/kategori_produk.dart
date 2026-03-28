@@ -9,8 +9,9 @@ import 'package:tokosembakolatihan/main.dart';
 class KategoriProduk extends StatelessWidget {
   const KategoriProduk({super.key});
 
-
-
+  final Color _primaryBlue = const Color.fromARGB(255, 95, 133, 218);
+  final Color _dangerRed = const Color.fromARGB(255, 245, 36, 36);
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,40 +103,43 @@ class KategoriProduk extends StatelessWidget {
               height: 40,
               child: ElevatedButton(
                 onPressed: () {
-
-                  //tampilkan dialog konfirmasi logout
-                  showDialog(context: context, builder:(BuildContext context){
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      title: const Text('Konfirmasi Logout',style: TextStyle(fontFamily: 'Poppins'),),
-                      content: const Text('Apakah Anda yakin ingin logout?',style: TextStyle(fontFamily: 'Poppins'),),
-                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal',style: TextStyle(fontFamily: 'Poppins'),)),
-                      TextButton(onPressed: (){
-                        Navigator.pop(context); // Tutup dialog
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MyApp()),
-                          (route) => false,);
-                      }, child: const Text('Ya',style: TextStyle(fontFamily: 'Poppins'),),)],
-                    );
-                  });
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        title: const Text('Peringatan', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                        content: const Text('Apakah Anda yakin ingin logout?', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins')),
+                        actions: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: ElevatedButton.styleFrom(backgroundColor: _primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                                  child: const Text('Batal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const MyApp()), (route) => false);
+                                  },
+                                  style: ElevatedButton.styleFrom(backgroundColor: _dangerRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                                  child: const Text('Logout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      );
+                    },
+                  );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 245, 36, 36),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                ),
-                child: const Text(
-                  'Log Out',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: _dangerRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))),
+                child: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white)),
               ),
             ),
             const SizedBox(height: 20),
