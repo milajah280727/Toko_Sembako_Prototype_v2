@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tokosembakolatihan/admin/batch_produk.dart';
-import 'package:tokosembakolatihan/admin/product/daftar_produk.dart';
+import 'package:tokosembakolatihan/admin/daftar_produk.dart';
 import 'package:tokosembakolatihan/admin/dashboard.dart';
 import 'package:tokosembakolatihan/admin/kategori_produk.dart';
 import 'package:tokosembakolatihan/main.dart';

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -8,7 +10,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:tokosembakolatihan/admin/product/barcode_scanner_page.dart'; // IMPORT FILE SCANNER BARU
+import 'package:tokosembakolatihan/admin/barcode_scanner_page.dart'; 
 
 class DaftarProdukTambah extends StatefulWidget {
   const DaftarProdukTambah({super.key});
@@ -56,6 +58,7 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
       setState(() {
         _kategoriList = loadedKategori;
         _isLoadingKategori = false;
+        // Tetap auto-select kategori pertama agar langsung terisi
         if (_kategoriList.isNotEmpty) {
           _selectedKategori = _kategoriList.first;
         }
@@ -79,6 +82,127 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
     return barcode;
   }
 
+  // --- FUNGSI BARU: MODAL SEARCH KATEGORI ---
+  void _showCategoryPicker() {
+    final TextEditingController searchCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            String query = searchCtrl.text.toLowerCase();
+            List<String> filteredList = _kategoriList.where((k) {
+              return k.toLowerCase().contains(query);
+            }).toList();
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.65,
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const Text(
+                    'Pilih Kategori',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: searchCtrl,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Ketik nama kategori...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                    onChanged: (value) => setModalState(() {}),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: filteredList.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Kategori tidak ditemukan',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) {
+                              final kategori = filteredList[index];
+                              bool isSelected = _selectedKategori == kategori;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: ListTile(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  tileColor: isSelected
+                                      ? const Color.fromARGB(255, 95, 133, 218)
+                                          .withOpacity(0.1)
+                                      : Colors.transparent,
+                                  title: Text(
+                                    kategori,
+                                    style: TextStyle(
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? const Color.fromARGB(
+                                              255, 95, 133, 218)
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  trailing: isSelected
+                                      ? const Icon(
+                                          Icons.check_circle,
+                                          color: Color.fromARGB(
+                                              255, 95, 133, 218),
+                                        )
+                                      : null,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedKategori = kategori;
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -87,7 +211,10 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.photo_library,color: Colors.blueAccent,),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Colors.blueAccent,
+                ),
                 title: const Text('Galeri'),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -95,7 +222,10 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera,color: Colors.blueAccent),
+                leading: const Icon(
+                  Icons.photo_camera,
+                  color: Colors.blueAccent,
+                ),
                 title: const Text('Kamera'),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -175,6 +305,7 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
 
       return imageUrl;
     } catch (e) {
+      // ignore: avoid_print
       print("GAGAL Upload Image: $e");
       return null;
     }
@@ -362,17 +493,18 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                           Icon(
                             Icons.add_photo_alternate_outlined,
                             size: 50,
-                            color: Colors.blueAccent
+                            color: Colors.blueAccent,
                           ),
-
                           SizedBox(height: 30),
-
                           Padding(
                             padding: EdgeInsets.only(left: 15, right: 15),
                             child: Text(
                               'Tap untuk menagmbil foto atau tambahkan melalui galeri',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.grey,fontFamily: 'Poppins', fontSize: 12),
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontFamily: 'Poppins',
+                                  fontSize: 12),
                             ),
                           ),
                         ],
@@ -418,7 +550,7 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                                 Icons.qr_code_scanner,
                                 color: Colors.blueAccent,
                               ),
-                              onPressed: _startScan, // Memanggil fungsi scan
+                              onPressed: _startScan,
                               constraints: const BoxConstraints(),
                               padding: const EdgeInsets.all(8),
                             ),
@@ -461,7 +593,6 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  
                 ],
               ),
             ),
@@ -475,6 +606,7 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
             ),
             const SizedBox(height: 16),
 
+            // --- BAGIAN YANG DIGANTI MENJADI MODAL SEARCH ---
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -498,46 +630,56 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
                       ),
                     ],
                   ),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedKategori,
-                    decoration: InputDecoration(
-                      // prefixIcon dihapus
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 16,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      // Outline saat tidak ditekan
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
+                  child: _isLoadingKategori
+                      ? const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      : InkWell(
+                          onTap: _showCategoryPicker, // Memanggil modal search
+                          borderRadius: BorderRadius.circular(12),
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 16,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 1.5,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color.fromARGB(255, 95, 133, 218),
+                                  width: 2,
+                                ),
+                              ),
+                              // Tambah icon search agar user tahu itu bisa dicari
+                              suffixIcon: const Icon(Icons.search, color: Colors.grey),
+                            ),
+                            child: Text(
+                              _selectedKategori ?? 'Pilih Kategori',
+                              style: TextStyle(
+                                color: _selectedKategori != null
+                                    ? Colors.black
+                                    : Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      // Outline saat ditekan
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color.fromARGB(255, 95, 133, 218),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    hint: const Text('Pilih Kategori'),
-                    items: _kategoriList.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedKategori = newValue;
-                      });
-                    },
-                  ),
                 ),
               ],
             ),
@@ -614,20 +756,17 @@ class _DaftarProdukTambahState extends State<DaftarProdukTambah> {
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            // Ikon dihapus dari sini
             contentPadding: const EdgeInsets.symmetric(
               vertical: 10,
               horizontal: 10,
             ),
-            // Outline saat tidak ditekan
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
             ),
-            // Outline saat ditekan (Focus)
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+            focusedBorder:  OutlineInputBorder(
+              borderRadius:  BorderRadius.circular(12),
+              borderSide: BorderSide(
                 color: Color.fromARGB(255, 95, 133, 218),
                 width: 2,
               ),

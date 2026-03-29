@@ -3,13 +3,12 @@ import 'package:tokosembakolatihan/admin/batch_produk.dart';
 import 'package:tokosembakolatihan/admin/kategori_produk.dart';
 import 'package:tokosembakolatihan/admin/manajemen_user.dart';
 import 'package:tokosembakolatihan/main.dart';
-import 'package:tokosembakolatihan/admin/product/daftar_produk.dart';
+import 'package:tokosembakolatihan/admin/daftar_produk.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
 
-  final Color _primaryBlue = const Color.fromARGB(255, 95, 133, 218);
-  final Color _dangerRed = const Color.fromARGB(255, 245, 36, 36);
+
 
   @override
   Widget build(BuildContext context) {
